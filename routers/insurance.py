@@ -46,4 +46,38 @@ def create_insurance(data: InsuranceCreate,db: Session = Depends(get_db)):
 @router.get("/",response_model=list[InsuranceResponse])
 def get_insurance(db: Session = Depends(get_db)):
     return db.query(Insurance).all()
-    
+
+@router.put("/", response_model=InsuranceResponse)
+def update_insurance(
+    insurance_id: int,
+    data: InsuranceCreate,
+    db: Session = Depends(get_db)
+):
+    insurance = db.query(Insurance).filter(Insurance.id == insurance_id).first()
+
+    if not insurance:
+        raise HTTPException(status_code=404, detail="Registro no encontrado")
+
+    charges = predict_charges(data.smoker, data.age, data.bmi)
+
+    insurance.smoker = data.smoker
+    insurance.age = data.age
+    insurance.bmi = data.bmi
+    insurance.charges = charges
+
+    db.commit()
+    db.refresh(insurance)
+
+    return insurance
+
+@router.delete("/")
+def delete_insurance(insurance_id: int, db: Session = Depends(get_db)):
+    insurance = db.query(Insurance).filter(Insurance.id == insurance_id).first()
+
+    if not insurance:
+        raise HTTPException(status_code=404, detail="Registro no encontrado")
+
+    db.delete(insurance)
+    db.commit()
+
+    return {"message": "Registro eliminado correctamente"}
