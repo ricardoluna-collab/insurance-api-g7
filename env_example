@@ -1,0 +1,1 @@
+DATABASE_URL=mysql+mysqldb://root:root2025@localhost/db_insurance_api
